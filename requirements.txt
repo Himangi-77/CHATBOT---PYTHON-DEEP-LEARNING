@@ -1,0 +1,8 @@
+Flask
+torch
+torchvision
+nltk
+gunicorn
+openai
+openpyxl
+pandas
