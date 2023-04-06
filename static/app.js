@@ -1,48 +1,89 @@
+const XLSX = require('xlsx');
 class Chatbox {
-    constructor() {
-      this.args = {
-        openButton: document.querySelector('.chatbox__button'),
-        chatBox: document.querySelector('.chatbox__support'),
-        sendButton: document.querySelector('.send__button')
+  constructor() {
+    this.args = {
+      openButton: document.querySelector('.chatbox__button'),
+      chatBox: document.querySelector('.chatbox__support'),
+      sendButton: document.querySelector('.send__button')
+    }
+
+    this.state = false;
+    this.messages = [];
+  }
+
+  display() {
+    const {openButton, chatBox, sendButton} = this.args;
+
+    openButton.addEventListener('click', () => {
+      this.toggleState(chatBox);
+
+      if (!this.messages.length) {
+        const msg1 = {name : "Alice", message : "Hey! This is Alice. Welcome to Zi Cloud. May I know your name?"};
+        this.messages.push(msg1);
+        this.updateChatText(chatBox);
       }
-  
-      this.state = false;
-      this.messages = [];
+    });
+
+    sendButton.addEventListener('click', () => this.onSendButton(chatBox));
+
+    const node = chatBox.querySelector('input');
+    node.addEventListener('keyup', ({key}) => {
+      if (key === "Enter") {
+        this.onSendButton(chatBox);
+      }
+    });
+  }
+
+  toggleState(chatBox){
+      this.state = !this.state;
+
+      if(this.state) {
+          chatBox.classList.add('chatbox--active')
+      } else {
+          chatBox.classList.remove('chatbox--active')
+      }
+  }
+
+  onSendButton(chatBox) {
+    const textField = chatBox.querySelector('input');
+    const text1 = textField.value.trim();
+
+    if (text1 === "") {
+        return;
     }
-  
-    display() {
-      const {openButton, chatBox, sendButton} = this.args;
-  
-      openButton.addEventListener('click', () => this.toggleState(chatBox));
-  
-      sendButton.addEventListener('click', () => this.onSendButton(chatBox));
-  
-      const node = chatBox.querySelector('input');
-      node.addEventListener('keyup', ({key}) => {
-        if (key === "Enter") {
-          this.onSendButton(chatBox);
-        }
-      });
-    }
 
-    toggleState(chatBox){
-        this.state = !this.state;
+    if (this.messages.length === 1) {
+        const msg1 = {name : "User", message : text1};
+        this.messages.push(msg1);
 
-        if(this.state) {
-            chatBox.classList.add('chatbox--active')
-        } else {
-            chatBox.classList.remove('chatbox--active')
-        }
-    }
+        const msg2 = {name: "Alice", message: `Great. Hope you're having a nice day, ${text1}.`};
+        this.messages.push(msg2);
+    } else if (this.messages.length === 3) {
+        const msg1 = {name : "User", message : text1};
+        this.messages.push(msg1);
 
-    onSendButton(chatBox) {
-        var textField = chatBox.querySelector('input');
-        let text1 = textField.value
-        if (text1 === "") {
-            return;
-        }
+        const msg2 = {name: "Alice", message: "I would like to ask you a few routine questions. Should we start?"};
+        this.messages.push(msg2);
+    } else if (this.messages.length === 5) {
+        const msg1 = {name : "User", message : text1};
+        this.messages.push(msg1);
 
-        let msg1 = {name : "User", message : text1}
+        const msg2 = {name: "Alice", message: "Can the platform integrate with other tools and software that you use in your marketing stack?"};
+        this.messages.push(msg2);
+    } else if (this.messages.length === 7) {
+      const msg1 = {name : "User", message : text1};
+      this.messages.push(msg1);
+
+      const msg2 = {name: "Alice", message: "How does the platform handle different types of data, such as customer demographics, website traffic, and social media engagement?"};
+      this.messages.push(msg2);
+     } else if (this.messages.length === 9) {
+      const msg1 = {name : "User", message : text1};
+      this.messages.push(msg1);
+
+      const msg2 = {name: "Alice", message: "What is your budget for a marketing analytics platform?"};
+      this.messages.push(msg2);
+     }  else {
+        const msg1 = {name : "User", message : text1};
         this.messages.push(msg1);
 
         fetch($SCRIPT_ROOT + '/predict', {
@@ -55,37 +96,40 @@ class Chatbox {
         })
         .then(r => r.json())
         .then(r => {
-            let msg2 = {name: "Sam", message: r.answer};
+            const msg2 = {name: "Alice", message: r.answer};
             this.messages.push(msg2);
-            this.updateChatText(chatBox)
-            textField.value = ''
+            this.updateChatText(chatBox);
+            textField.value = '';
         }).catch((error) => {
             console.error(error);
-            this.updateChatText(chatBox)
-            textField.value = ''
+            this.updateChatText(chatBox);
+            textField.value = '';
         });
     }
 
-    updateChatText(chatBox) {
-        var html = '';
-        this.messages.slice().reverse().forEach(function(item, index) {
-            if(item.name==="Sam")
-            {
-                html += '<div class="messages__item messages__item--visitor">' + item.message + '</div>'
-            }
-            else
-            {
-                html += '<div class="messages__item messages__item--operator">' + item.message + '</div>'
-            }
-        });
+    this.updateChatText(chatBox);
+    textField.value = '';
+}
 
-        const chatmessage = chatBox.querySelector('.chatbox__messages');
-        chatmessage.innerHTML = html;
-    }
+
+  updateChatText(chatBox) {
+      let html = '';
+      this.messages.slice().reverse().forEach(function(item) {
+          if(item.name==="Alice") {
+              html += '<div class="messages__item messages__item--visitor">' + item.message + '</div>'
+          } else {
+              html += '<div class="messages__item messages__item--operator">' + item.message + '</div>'
+          }
+      });
+
+      const chatmessage = chatBox.querySelector('.chatbox__messages');
+      chatmessage.innerHTML = html;
   }
+}
 
 const chatBox = new Chatbox();
 chatBox.display();
+
 
 /*
 class Chatbox {
