@@ -1,10 +1,12 @@
 import random
 import json
-
 import torch
-
+import pandas as pd
 from model import NeuralNet
 from nltk_utils import bag_of_words, tokenize
+import openai
+
+openai.api_key = "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"
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -25,23 +27,23 @@ model = NeuralNet(input_size, hidden_size, output_size).to(device)
 model.load_state_dict(model_state)
 model.eval()
 
-bot_name = "Sam"
-
-import openai
-
-openai.api_key = "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"
+bot_name = "Alice"
 
 def get_gpt_response(msg):
-    response = openai.Completion.create(
-        engine="davinci",
-        prompt=f"User: {msg}\nAI:",
+    prompt = f"User: {msg}"
+    completions = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=prompt,
         max_tokens=1024,
         n=1,
         stop=None,
-        temperature=0.5,
+        temperature=0.7,
+        frequency_penalty=0,
+        presence_penalty=0
     )
-
-    message = response.choices[0].text.strip()
+    message = completions.choices[0].text.strip()
+    # get only the first response or until the message hits the word "User"
+    message = message.split("User")[0].strip()
     return message
 
 def get_response(msg):
@@ -61,19 +63,40 @@ def get_response(msg):
         for intent in intents['intents']:
             if tag == intent["tag"]:
                 return random.choice(intent['responses'])
+
+    # check for default response options
+    if "help" in msg.lower():
+        return ["How can I assist you?", "What can I help you with?"]
+    elif "hello" in msg.lower() or "hi" in msg.lower():
+        return ["Hi there!", "Hello! How may I help you today?"]
     
     # Redirect unanswered questions to ChatGPT
     response = get_gpt_response(msg)
     return response
 
 if __name__ == "__main__":
-    print("Let's chat! (type 'quit' to exit)")
+    # create an empty dataframe
+    df = pd.DataFrame(columns=['User', 'Alice'])
+
+    print("Hello! I am Alice.")
+
+    # default responses
+    default_responses = ["How can I help you today?"]
+    for response in default_responses:
+        print(bot_name + ": " + response)
+        df.loc[len(df)] = ["", response]
+
     while True:
-        # sentence = "do you use credit cards?"
         sentence = input("You: ")
         if sentence == "quit":
             break
 
         resp = get_response(sentence)
-        print(resp)
+        print(bot_name + ": " + resp)
+
+        # record user input and bot response in dataframe
+        df.loc[len(df)] = [sentence, resp]
+
+    # save dataframe to excel file
+    df.to_excel("Conversations.xlsx", index=False)
 
